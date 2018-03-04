@@ -35,21 +35,24 @@ lazy val kafkaStreamsModelServerInMemoryStore = (project in file("./kafkaStreams
   .settings(dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-core" % "2.9.1",
     dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.1"
   )
-  .settings(libraryDependencies ++= Seq(Dependencies.kafkastreams) ++ Dependencies.webDependencies ++ Dependencies.akkHTTPPSupport)
+  .settings(libraryDependencies ++= Seq(Dependencies.kafkastreams)
+    ++ Dependencies.webDependencies ++ Dependencies.akkHTTPPSupport ++ Dependencies.xmlBindModules)
   .dependsOn(model, configuration)
 
 lazy val kafkaStreamsModelServerKVStore = (project in file("./kafkaStreamsModelServerKVStore"))
   .settings(dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-core" % "2.9.1",
     dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.1"
   )
-  .settings(libraryDependencies ++= Seq(Dependencies.kafkastreams, Dependencies.kafkastreamsScala) ++ Dependencies.webDependencies ++ Dependencies.akkHTTPPSupport)
+  .settings(libraryDependencies ++= Seq(Dependencies.kafkastreams, Dependencies.kafkastreamsScala)
+    ++ Dependencies.webDependencies ++ Dependencies.akkHTTPPSupport ++ Dependencies.xmlBindModules)
   .dependsOn(model, configuration)
 
 lazy val kafkaStreamsModelServerCustomStore = (project in file("./kafkaStreamsModelServerCustomStore"))
   .settings(dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-core" % "2.9.1",
     dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.1"
   )
-  .settings(libraryDependencies ++= Seq(Dependencies.kafkastreams, Dependencies.kafkastreamsScala) ++ Dependencies.webDependencies ++ Dependencies.akkHTTPPSupport)
+  .settings(libraryDependencies ++= Seq(Dependencies.kafkastreams, Dependencies.kafkastreamsScala)
+    ++ Dependencies.webDependencies ++ Dependencies.akkHTTPPSupport ++ Dependencies.xmlBindModules)
   .dependsOn(model, configuration)
 
 lazy val akkaStreamsCustomStage = (project in file("./akkaStreamsCustomStage"))
@@ -57,7 +60,7 @@ lazy val akkaStreamsCustomStage = (project in file("./akkaStreamsCustomStage"))
     dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.1"
   )
   .settings(libraryDependencies ++= Dependencies.kafkabaseDependencies ++ Dependencies.akkaServerDependencies
-    ++ Dependencies.modelsDependencies)
+    ++ Dependencies.modelsDependencies ++ Dependencies.xmlBindModules)
   .dependsOn(model, configuration)
 
 lazy val akkaActorsPersistent = (project in file("./akkaActorsPersistent"))
@@ -65,7 +68,7 @@ lazy val akkaActorsPersistent = (project in file("./akkaActorsPersistent"))
     dependencyOverrides += "com.fasterxml.jackson.core" % "jackson-databind" % "2.9.1"
   )
   .settings(libraryDependencies ++= Dependencies.kafkabaseDependencies ++ Dependencies.akkaServerDependencies
-    ++ Dependencies.modelsDependencies)
+    ++ Dependencies.modelsDependencies ++ Dependencies.xmlBindModules)
   .dependsOn(model, configuration)
 
 
