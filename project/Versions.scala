@@ -9,7 +9,6 @@ object Versions {
   val akkaHttpVersion = "10.0.11"
   val akkaHttpJsonVersion = "1.19.0"
 
-
   val Curator        = "4.0.1"
 
   val kafkaVersion = "1.0.0"
@@ -23,4 +22,6 @@ object Versions {
   val jerseyVersion = "2.26"
   val gsonVersion = "2.8.2"
   val wsrsVersion = "2.1"
+
+  val xmlBind = "2.2.11"
 }

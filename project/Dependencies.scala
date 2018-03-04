@@ -16,7 +16,7 @@ object Dependencies {
   val kafka         = "org.apache.kafka"                %% "kafka"                        % kafkaVersion
   val kafkaclients  = "org.apache.kafka"                %  "kafka-clients"                % kafkaVersion
   val kafkastreams  = "org.apache.kafka"                %  "kafka-streams"                % kafkaVersion
-  val kafkastreamsScala  = "com.lightbend"              %% "kafka-streams-scala"          %  KafkaScalaVersion
+  val kafkastreamsScala  = "com.lightbend"              %% "kafka-streams-scala"          % KafkaScalaVersion
 
   val curator       = "org.apache.curator"              % "curator-test"                  % Curator                 // ApacheV2
 
@@ -32,11 +32,16 @@ object Dependencies {
   val jpmml         = "org.jpmml"                       % "pmml-evaluator"                % PMMLVersion
   val jpmmlextras   = "org.jpmml"                       % "pmml-evaluator-extension"      % PMMLVersion
 
+  // This is required for Java 9+
+  val jxb           = "javax.xml.bind"   % "jaxb-api"  % xmlBind
+  val csxbc         = "com.sun.xml.bind" % "jaxb-core" % xmlBind
+  val csxbi         = "com.sun.xml.bind" % "jaxb-impl" % xmlBind
+  val xmlBindModules = Seq(jxb, csxbc, csxbi)
 
-  val modelsDependencies    = Seq(jpmml, jpmmlextras, tensorflow)
-  val kafkabaseDependencies = Seq(reactiveKafka) ++ Seq(kafkaclients)
-  val webDependencies       = Seq(gson, jersey, jerseymedia, jettyserver, jettyservlet) //, wsrs)
-  val akkHTTPPSupport       = Seq(akkaHttp, akkaHttpJsonJackson)
+  val modelsDependencies     = Seq(jpmml, jpmmlextras, tensorflow) ++ xmlBindModules
+  val kafkabaseDependencies  = Seq(reactiveKafka, kafkaclients)
+  val webDependencies        = Seq(gson, jersey, jerseymedia, jettyserver, jettyservlet) //, wsrs)
+  val akkHTTPPSupport        = Seq(akkaHttp, akkaHttpJsonJackson)
   val akkaServerDependencies = Seq(akkaStream, akkaHttp, akkaHttpJsonJackson, reactiveKafka)
 
 }
