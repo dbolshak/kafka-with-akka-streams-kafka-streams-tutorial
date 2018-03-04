@@ -1,12 +1,18 @@
 
 import Dependencies._
 
-scalaVersion in ThisBuild := "2.11.12"
-// scalaVersion in ThisBuild := "2.12.4"
+// scalaVersion in ThisBuild := "2.11.12"
+scalaVersion in ThisBuild := "2.12.4"
 
 scalacOptions in ThisBuild := Seq("-Xexperimental", "-Xlint:_", "-unchecked", "-deprecation", "-feature", "-target:jvm-1.8")
 javaOptions in ThisBuild := Seq("-Xlint:all")
 // compileOrder := CompileOrder.JavaThenScala
+
+// Workaround for this problem: https://github.com/sbt/sbt/issues/3618
+val workaround = {
+  sys.props += "packaging.type" -> "jar"
+  ()
+}
 
 lazy val protobufs = (project in file("./protobufs"))
     .settings(
