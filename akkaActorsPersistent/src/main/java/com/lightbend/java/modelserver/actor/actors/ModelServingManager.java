@@ -5,9 +5,9 @@ import akka.actor.ActorRef;
 import akka.event.Logging;
 import akka.event.LoggingAdapter;
 import com.google.common.collect.Lists;
-import com.lightbend.model.Winerecord;
 import com.lightbend.java.model.ModelServingInfo;
 import com.lightbend.java.model.ModelWithDescriptor;
+import com.lightbend.model.Winerecord;
 import scala.Option;
 
 import java.util.LinkedList;
@@ -48,8 +48,8 @@ public class ModelServingManager extends AbstractActor {
                     if(mayBeRef.isEmpty())
                         getSender().tell(ModelServingInfo.empty, getSelf());
                     else
-                       mayBeRef.get().forward(dataType, getContext());
-                })
+                        mayBeRef.get().forward(dataType, getContext());
+                    })
                 .match(GetModels.class, models -> {
                     getSender().tell(getInstances(), getSelf());
                 })

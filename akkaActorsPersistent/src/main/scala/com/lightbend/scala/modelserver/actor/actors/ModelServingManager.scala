@@ -19,13 +19,14 @@ class ModelServingManager extends Actor {
 
   override def receive = {
     case model: ModelWithDescriptor => getModelServer(model.descriptor.dataType) forward model
+
     case record: WineRecord => getModelServer(record.dataType) forward record
-    case getState: GetState => {
-      context.child(getState.dataType) match {
-        case Some(actorRef) => actorRef forward getState
-        case _ => sender() ! ModelToServeStats.empty
-      }
+
+    case getState: GetState => context.child(getState.dataType) match{
+      case Some(server) => server forward getState
+      case _ => sender() ! ModelToServeStats.empty
     }
+
     case getModels : GetModels => sender() ! getInstances
   }
 }

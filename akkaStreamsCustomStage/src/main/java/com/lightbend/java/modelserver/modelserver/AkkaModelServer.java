@@ -54,24 +54,24 @@ public class AkkaModelServer {
         Source<Winerecord.WineRecord, Consumer.Control> dataStream =
             Consumer.atMostOnceSource(dataConsumerSettings, Subscriptions.topics(ApplicationKafkaParameters.DATA_TOPIC))
                 .map(record -> DataConverter.convertData(record.value()))
-                .filter(record -> record.isPresent()).map(record ->record.get());
+                .filter(record -> record.isPresent()).map(record -> record.get());
 
         // Model Predictions
         Source<Optional<Double>,ReadableModelStore> modelPredictions =
-        dataStream.viaMat(new ModelStage(), Keep.right()).map(result -> {
-            if(result.isProcessed()) {
-                System.out.println("Calculated quality - " + result.getResult() + " in " + result.getDuration() + "ms");
-                return Optional.of(result.getResult());
-            }
-            else {
-                System.out.println("No model available - skipping");
-                return Optional.empty();
-            }
-        });
-
+                dataStream.viaMat(new ModelStage(), Keep.right()).map(result -> {
+                    if(result.isProcessed()) {
+                        System.out.println("Calculated quality - " + result.getResult() + " in " + result.getDuration() + "ms");
+                        return Optional.of(result.getResult());
+                    }
+                    else {
+                        System.out.println("No model available - skipping");
+                        return Optional.empty();
+                    }
+                });
         ReadableModelStore modelStateStore =
                 modelPredictions
                         .to(Sink.ignore())      // we do not read the results directly
+                        // try changing Sink.ignore() to Sink.foreach(x -> System.out.println(x))) What gets printed?
                         .run(materializer);     // we run the stream, materializing the stage's StateStore
 
         // model stream
@@ -85,6 +85,7 @@ public class AkkaModelServer {
         startRest(system,materializer,modelStateStore);
     }
 
+    // Serve model status: http://localhost:5500/state
     private static void startRest(ActorSystem system, ActorMaterializer materializer, ReadableModelStore reader) {
         QueriesAkkaHTTPResource resource = new QueriesAkkaHTTPResource(reader);
         Flow<HttpRequest, HttpResponse, NotUsed> routeFlow = resource.createRoute().flow(system, materializer);

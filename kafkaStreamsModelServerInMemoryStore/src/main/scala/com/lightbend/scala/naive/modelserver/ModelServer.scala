@@ -76,6 +76,7 @@ object ModelServer {
     new KafkaStreams(topology, streamsConfiguration)
   }
 
+  // Surf to http://localhost:8888/state/value
   private def startRestProxy(streams: KafkaStreams, port: Int) = {
 
     implicit val system = ActorSystem("ModelServing")
@@ -89,7 +90,7 @@ object ModelServer {
     Http().bindAndHandle(routes, host, port) map
       { binding => println(s"Starting models observer on port ${binding.localAddress}") } recover {
       case ex =>
-        println(s"Models observer could not bind to $host:$port", ex.getMessage)
+        println(s"Models observer could not bind to $host:$port - ${ex.getMessage}")
     }
   }
 

@@ -8,8 +8,8 @@ import scala.util.Success
 
 class DataProcessor extends AbstractProcessor[Array[Byte], Array[Byte]]{
 
-  private var modelStore = null.asInstanceOf[StoreState]
-  private var ctx = null.asInstanceOf[ProcessorContext]
+  private var modelStore: StoreState = null
+  private var ctx: ProcessorContext = null
 
   override def process(key: Array[Byte], value: Array[Byte]): Unit = {
     DataRecord.fromByteArray(value) match {
@@ -35,11 +35,11 @@ class DataProcessor extends AbstractProcessor[Array[Byte], Array[Byte]]{
             val duration = System.currentTimeMillis() - start
 //            println(s"Calculated quality - $quality calculated in $duration ms")
             modelStore.currentState = modelStore.currentState.map(_.incrementUsage(duration))
-            ctx.forward(key, ServingResult(true, quality, duration))
+            ctx.forward(key, ServingResult(quality, duration))
           }
           case _ => {
 //            println("No model available - skipping")
-            ctx.forward(key, ServingResult(false))
+            ctx.forward(key, ServingResult.noModel)
           }
         }
         ctx.commit()

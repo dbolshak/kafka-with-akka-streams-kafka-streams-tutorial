@@ -16,7 +16,7 @@ import scala.util.Try
 
 class DataProcessor extends Transformer[Array[Byte], Try[WineRecord], (Array[Byte], ServingResult)]{
 
-  private var modelStore = null.asInstanceOf[KeyValueStore[Integer, StoreState]]
+  private var modelStore: KeyValueStore[Integer, StoreState] = null
 
   import ApplicationKafkaParameters._
 
@@ -69,7 +69,7 @@ class DataProcessor extends Transformer[Array[Byte], Try[WineRecord], (Array[Byt
 
 class DataProcessorKV extends Transformer[Array[Byte], Try[WineRecord], KeyValue[Array[Byte], ServingResult]]{
 
-  private var modelStore = null.asInstanceOf[KeyValueStore[Integer, StoreState]]
+  private var modelStore: KeyValueStore[Integer, StoreState] = null
 
   import ApplicationKafkaParameters._
 
@@ -99,11 +99,11 @@ class DataProcessorKV extends Transformer[Array[Byte], Try[WineRecord], KeyValue
         val duration = System.currentTimeMillis() - start
         //        println(s"Calculated quality - $quality calculated in $duration ms")
         state.currentState = state.currentState.map(_.incrementUsage(duration))
-        ServingResult(true, quality, duration)
+        ServingResult(quality, duration)
       }
       case _ => {
         //        println("No model available - skipping")
-        ServingResult(false)
+        ServingResult.noModel
       }
     }
     modelStore.put(STORE_ID, state)

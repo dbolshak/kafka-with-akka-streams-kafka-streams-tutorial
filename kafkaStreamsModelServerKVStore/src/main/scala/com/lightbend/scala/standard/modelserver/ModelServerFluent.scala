@@ -41,7 +41,7 @@ object ModelServerFluent {
     streamsConfiguration.put(StreamsConfig.DEFAULT_KEY_SERDE_CLASS_CONFIG, Serdes.ByteArray.getClass)
     streamsConfiguration.put(StreamsConfig.DEFAULT_VALUE_SERDE_CLASS_CONFIG, Serdes.ByteArray.getClass)
     // Add a topic config by prefixing with topic
-//    streamsConfiguration.put(StreamsConfig.topicPrefix(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG), "earliest")
+    //   streamsConfiguration.put(StreamsConfig.topicPrefix(ConsumerConfig.AUTO_OFFSET_RESET_CONFIG), "earliest")
     // Create topology
     val streams = createStreams(streamsConfiguration)
     // Set Stream exception handler
@@ -83,6 +83,7 @@ object ModelServerFluent {
 
 
     // Data Processor
+
     data
       .mapValues(value => DataRecord.fromByteArray(value))
       .filter((key, value) => (value.isSuccess))
@@ -122,7 +123,7 @@ object ModelServerFluent {
     Http().bindAndHandle(routes, host, port) map
       { binding => println(s"Starting models observer on port ${binding.localAddress}") } recover {
       case ex =>
-        println(s"Models observer could not bind to $host:$port", ex.getMessage)
+        println(s"Models observer could not bind to $host:$port - ${ex.getMessage}")
     }
   }
 
