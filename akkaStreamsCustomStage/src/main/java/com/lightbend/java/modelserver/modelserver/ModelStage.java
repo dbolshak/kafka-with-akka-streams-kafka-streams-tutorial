@@ -37,6 +37,8 @@ public class ModelStage extends AbstractGraphStageWithMaterializedValue<FlowShap
                 @Override
                 public void onPush() throws Exception {
                     Winerecord.WineRecord dataRecord = grab(dataRecordIn);
+                    // If we have a new model that hasn't been set as the current model,
+                    // do that first...
                     if (newModel.isPresent()) {
                         // update the model
                         if (currentModel.isPresent())
@@ -46,7 +48,7 @@ public class ModelStage extends AbstractGraphStageWithMaterializedValue<FlowShap
                         newModel = Optional.empty();
                     }
 
-                    // Actually score
+                    // ... now score the record, IF we have a current model.
                     if (currentModel.isPresent()) {
                         // Score the model
                         long start = System.currentTimeMillis();

@@ -31,6 +31,8 @@ class ModelStage extends GraphStageWithMaterializedValue[FlowShape[WineRecord, S
     setHandler(dataRecordIn, new InHandler {
       override def onPush(): Unit = {
         val record = grab(dataRecordIn)
+        // If we have a new model that hasn't been set as the current model,
+        // do that first...
         newModel.foreach { model =>
           // close current model first
           currentModel.foreach(_.cleanup())
@@ -39,6 +41,7 @@ class ModelStage extends GraphStageWithMaterializedValue[FlowShape[WineRecord, S
           currentState = newState
           newModel = None
         }
+        // ... now score the record, IF we have a current model.
         currentModel match {
           case Some(model) =>
             val start = System.nanoTime()
