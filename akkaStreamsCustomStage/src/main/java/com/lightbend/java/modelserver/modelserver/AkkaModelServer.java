@@ -53,11 +53,15 @@ public class AkkaModelServer {
         // Data Source
         Source<Winerecord.WineRecord, Consumer.Control> dataStream =
             Consumer.atMostOnceSource(dataConsumerSettings, Subscriptions.topics(ApplicationKafkaParameters.DATA_TOPIC))
-                .map(record -> DataConverter.convertData(record.value()))
-                .filter(record -> record.isPresent()).map(record -> record.get());
+                .map(consumerRecord -> DataConverter.convertData(consumerRecord.value()))
+                .filter(recordOpt -> recordOpt.isPresent())
+                .map(recordOpt -> recordOpt.get());
 
         // Model Predictions
+        // Here, we use a "custom ModelStage" to do scoring. In akkaActorsPersistent, we use another approach
+        // involving Akka actors.
         Source<Optional<Double>,ReadableModelStore> modelPredictions =
+                // Materialize the combined stream and stage, keep the output of the model stage "on the right".
                 dataStream.viaMat(new ModelStage(), Keep.right()).map(result -> {
                     if(result.isProcessed()) {
                         System.out.println("Calculated quality - " + result.getResult() + " in " + result.getDuration() + "ms");
@@ -76,10 +80,12 @@ public class AkkaModelServer {
 
         // model stream
         Consumer.atMostOnceSource(modelConsumerSettings, Subscriptions.topics(ApplicationKafkaParameters.MODELS_TOPIC))
-                .map(record -> DataConverter.convertModel(record.value()))
-                .filter(record -> record.isPresent()).map(record -> record.get())
-                .map(record -> DataConverter.convertModel(record))
-                .filter(record -> record.isPresent()).map(record -> record.get())
+                .map(consumerRecord -> DataConverter.convertModel(consumerRecord.value()))
+                .filter(modelToServeOpt -> modelToServeOpt.isPresent())
+                .map(modelToServeOpt -> modelToServeOpt.get())
+                .map(modelToServe -> DataConverter.convertModel(modelToServe))
+                .filter(modelOpt -> modelOpt.isPresent())
+                .map(modelOpt-> modelOpt.get())
                 .runForeach(model -> modelStateStore.setModel(model), materializer);
 
         startRest(system,materializer,modelStateStore);

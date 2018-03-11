@@ -47,15 +47,18 @@ object AkkaModelServer {
 
     // Model stream processing
     Consumer.atMostOnceSource(modelConsumerSettings, Subscriptions.topics(MODELS_TOPIC))
-      .map(record => ModelToServe.fromByteArray(record.value)).collect { case Success(mts) => mts }
-      .map(record => ModelWithDescriptor.fromModelToServe(record)).collect { case Success(mod) => mod }
-      .mapAsync(1)(elem => modelserver ? elem)
+      .map(consumerRecord => ModelToServe.fromByteArray(consumerRecord.value))
+      .collect { case Success(modelToServe) => modelToServe }
+      .map(modelToServe => ModelWithDescriptor.fromModelToServe(modelToServe))
+      .collect { case Success(model) => model }
+      .mapAsync(1)(model => modelserver ? model)
       .runWith(Sink.ignore) // run the stream, we do not read the results directly
 
     // Data stream processing
     Consumer.atMostOnceSource(dataConsumerSettings, Subscriptions.topics(DATA_TOPIC))
-      .map(record => DataRecord.fromByteArray(record.value)).collect { case Success(elem) => elem }
-      .mapAsync(1)(elem => (modelserver ? elem).mapTo[ServingResult])
+      .map(consumerRecord => DataRecord.fromByteArray(consumerRecord.value))
+      .collect { case Success(dataRecord) => dataRecord }
+      .mapAsync(1)(dataRecord => (modelserver ? dataRecord).mapTo[ServingResult])
       .runForeach(result => {
         result.processed match {
           case true => println(s"Calculated quality - ${result.result} calculated in ${result.duration} ms")

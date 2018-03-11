@@ -15,8 +15,10 @@ import akka.kafka.javadsl.Consumer;
 import akka.stream.ActorMaterializer;
 import akka.stream.javadsl.Flow;
 import akka.stream.javadsl.Sink;
+import akka.stream.javadsl.Source;
 import akka.util.Timeout;
 import com.lightbend.java.configuration.kafka.ApplicationKafkaParameters;
+import com.lightbend.java.model.CurrentModelDescriptor;
 import com.lightbend.java.model.DataConverter;
 import com.lightbend.java.model.ServingResult;
 import com.lightbend.java.modelserver.actor.actors.ModelServingManager;
@@ -25,6 +27,7 @@ import org.apache.kafka.clients.consumer.ConsumerConfig;
 import org.apache.kafka.common.serialization.ByteArrayDeserializer;
 import scala.concurrent.ExecutionContextExecutor;
 
+import java.util.Optional;
 import java.util.concurrent.CompletionStage;
 import java.util.concurrent.TimeUnit;
 
@@ -61,21 +64,21 @@ public class AkkaModelServer {
 
         // Model stream processing
         Consumer.atMostOnceSource(modelConsumerSettings, Subscriptions.topics(ApplicationKafkaParameters.MODELS_TOPIC))
-                .map(record -> DataConverter.convertModel(record.value()))
-                .filter(record -> record.isPresent()).map(record -> record.get())
-                .map(record -> DataConverter.convertModel(record))
-                .filter(record -> record.isPresent()).map(record -> record.get())
-                .mapAsync(1, record -> ask(router, record, askTimeout))
+                .map(consumerRecord -> DataConverter.convertModel(consumerRecord.value()))
+                .filter(modelToServeOpt -> modelToServeOpt.isPresent()).map(modelToServeOpt -> modelToServeOpt.get())
+                .map(modelToServe -> DataConverter.convertModel(modelToServe))
+                .filter(modelOpt -> modelOpt.isPresent()).map(modelOpt -> modelOpt.get())
+                .mapAsync(1, model -> ask(router, model, askTimeout))
                 .runWith(Sink.ignore(), materializer);
 
         // Data stream processing
         Consumer.atMostOnceSource(dataConsumerSettings, Subscriptions.topics(ApplicationKafkaParameters.DATA_TOPIC))
-                .map(record -> DataConverter.convertData(record.value()))
-                .filter(record -> record.isPresent()).map(record ->record.get())
-                .mapAsync(1, record -> ask(router, record, askTimeout))
-                .map(record -> (ServingResult)record)
-                .runWith(Sink.foreach(record -> {
-                    if(record.isProcessed()) System.out.println("Calculated quality - " + record.getResult() + " in " + record.getDuration() + "ms");
+                .map(consumerRecord -> DataConverter.convertData(consumerRecord.value()))
+                .filter(dataRecordOpt -> dataRecordOpt.isPresent()).map(dataRecordOpt ->dataRecordOpt.get())
+                .mapAsync(1, dataRecord -> ask(router, dataRecord, askTimeout))
+                .map(result -> (ServingResult)result)
+                .runWith(Sink.foreach(result -> {
+                    if(result.isProcessed()) System.out.println("Calculated quality - " + result.getResult() + " in " + result.getDuration() + "ms");
                     else System.out.println("No model available - skipping");
                 }), materializer);
         startRest(system,materializer,router);

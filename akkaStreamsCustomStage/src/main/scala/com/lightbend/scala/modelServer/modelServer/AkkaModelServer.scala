@@ -47,10 +47,13 @@ object AkkaModelServer {
 
     val dataStream: Source[WineRecord, Consumer.Control] =
       Consumer.atMostOnceSource(dataConsumerSettings, Subscriptions.topics(DATA_TOPIC))
-        .map(record => DataRecord.fromByteArray(record.value))
+        .map(consumerRecord => DataRecord.fromByteArray(consumerRecord.value))
         .collect { case Success(dataRecord) => dataRecord }
 
+    // Here, we use a "custom ModelStage" to do scoring. In akkaActorsPersistent, we use another approach
+    // involving Akka actors.
     val modelPredictions: Source[Option[Double], ModelStateStore] =
+      // Materialize the combined stream and stage, keep the output of the model stage "on the right".
       dataStream.viaMat(new ModelStage)(Keep.right).map { result =>
         result.processed match {
           case true => println(s"Calculated quality - ${result.result} calculated in ${result.duration} ms"); Some(result.result)
@@ -61,14 +64,16 @@ object AkkaModelServer {
     val modelStateStore: ModelStateStore =
       modelPredictions
         .to(Sink.ignore)  // we do not read the results directly
-        // Try changing Sink.ignore to Sink.foreach(println). What gets printed. Do you understand the output?
+        // Try changing Sink.ignore to Sink.foreach(println). What gets printed? Do you understand the output?
         .run()            // we run the stream, materializing the stage's StateStore
 
     // model stream
     Consumer.atMostOnceSource(modelConsumerSettings, Subscriptions.topics(MODELS_TOPIC))
-      .map(record => ModelToServe.fromByteArray(record.value())).collect { case Success(mts) => mts }
-      .map(record => ModelWithDescriptor.fromModelToServe(record)).collect { case Success(mod) => mod }
-      .runForeach(modelStateStore.setModel)
+      .map(consumerRecord => ModelToServe.fromByteArray(consumerRecord.value()))
+      .collect { case Success(modelToServe) => modelToServe }
+      .map(modelToServe => ModelWithDescriptor.fromModelToServe(modelToServe))
+      .collect { case Success(model) => model }
+      .runForeach(model => modelStateStore.setModel(model))
 
     startRest(modelStateStore)
   }
